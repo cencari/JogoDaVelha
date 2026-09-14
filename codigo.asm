@@ -1,0 +1,253 @@
+ORG 0
+;Um dia eu matarei o GPS
+MAIN:
+    LDA #20
+    TRAP VIDEO_CONFIG
+    OR #0
+    JNZ ERRO
+    LDA #21
+    TRAP LIMPAR
+    JSR GAME
+    HLT
+
+GAME:
+    JSR LIMPAR_DISPLAY
+    JSR DESENHAR_LINHAS
+    JMP DISPLAY_CURSOR
+    JMP ESCOLHA
+    JMP GAME
+    RET
+
+LIMPAR_DISPLAY:
+    ;limpa o display para atualizar as imagens
+    LDA #21
+    TRAP LIMPAR
+
+DESENHAR_LINHAS:
+    ;faz as linhas do jogo da velha
+    LDA #23
+    TRAP RETA_1
+    LDA #23
+    TRAP RETA_2
+    LDA #23
+    TRAP RETA_3
+    LDA #23
+    TRAP RETA_4
+    LDA #5
+    RET
+
+DESENHAR_CIRCULO:
+    LDA PTR_ESTADO
+    ADD #1
+    STA PTR_ESTADO
+    LDA @PTR_ESTADO
+
+    
+    LDA #25
+    TRAP CIRCULO
+
+    JSR CONTADOR
+    SUB #9
+
+    JNZ DESENHAR_CIRCULO
+    JSR LIMPA_CONTADOR
+    RET
+
+CONTADOR:
+    LDA CONT
+    ADD #1
+    STA CONT
+
+LIMPA_CONTADOR:
+    LDA #0
+    STA CONT
+CONT: DB 0
+
+
+DISPLAY_CURSOR:
+    JSR IR_ESTADO
+    SUB #1
+    JZ CURSOR_VERMELHO
+    LDA #252
+    STA CURSOR+3
+    TRAP CURSOR
+    JMP ESCOLHA
+
+CURSOR_VERMEHO
+    LDA #224
+    STA CURSOR+3
+    TRAP CURSOR
+    JMP ESCOLHA
+    
+ESCOLHA:
+    LDA #1
+    TRAP ENTRADA
+
+    ;As entradas devem ser minusculas por enquanto
+    LDA ENTRADA
+    SUB #97    ;a
+    JZ ESQUERDA
+
+    LDA ENTRADA
+    SUB #100   ;d
+    JZ DIREITA
+
+    LDA ENTRADA
+    SUB #119   ;w
+    JZ CIMA
+
+    LDA ENTRADA
+    SUB #115   ;s
+    JZ BAIXO
+
+    ;Confirmar a seleção do quadrado
+    LDA ENTRADA
+    SUB #122   ;z
+    JZ CONFIRMAR
+
+    ;Se não decidir nada volta para decidir
+    JMP ESCOLHA
+
+;-------ESCOLHA DA DIRECAO---------
+ESQUERDA:
+    LDA CURSOR
+    SUB #22
+    JZ EXTREMA_ESQUERDA
+    LDA CURSOR
+    SUB #42
+    STA CURSOR
+    LDA POSICAO
+    SUB #1
+    STA POSICAO
+    JMP GAME
+
+EXTREMA_ESQUERDA: ;lol
+    LDA CURSOR
+    ADD #84
+    STA CURSOR
+    LDA POSICAO
+    ADD #2
+    STA POSICAO
+    JMP GAME
+
+DIREITA:
+    LDA CURSOR
+    SUB #106
+    JZ EXTREMA_DIREITA
+    LDA CURSOR
+    ADD #42
+    STA CURSOR
+    LDA POSICAO
+    ADD #1
+    STA POSICAO
+    JMP GAME
+
+EXTREMA_DIREITA: ;lol
+    LDA CURSOR
+    SUB #84
+    STA CURSOR
+    LDA POSICAO
+    SUB #2
+    STA POSICAO
+    JMP GAME
+    
+CIMA:
+    LDA CURSOR+1
+    SUB #11
+    JZ EXTREMO_CIMA
+    LDA CURSOR+1
+    SUB #21
+    STA CURSOR+1
+    LDA POSICAO
+    SUB #3
+    STA POSICAO
+    JMP GAME
+
+EXTREMO_CIMA:
+    LDA CURSOR+1
+    ADD #42
+    STA CURSOR+1
+    LDA POSICAO
+    ADD #6
+    STA POSICAO
+    JMP GAME
+
+BAIXO:
+    LDA CURSOR+1
+    SUB #53
+    JZ EXTREMO_BAIXO
+    LDA CURSOR+1
+    ADD #21
+    STA CURSOR+1
+    LDA POSICAO
+    ADD #3
+    STA POSICAO
+    JMP GAME
+
+EXTREMO_BAIXO:
+    LDA CURSOR+1
+    SUB #42
+    STA CURSOR+1
+    LDA POSICAO
+    SUB #6
+    STA POSICAO
+    JMP GAME
+
+CONFIRMAR:
+    JSR IR_ESTADO
+    SUB #1
+    jSR PREENCHER
+    JSR VOLTAR_ESTADO
+    JMP GAME
+
+IR_ESTADO:
+    LDA PTR_ESTADO
+    ADD POSICAO
+    STA PTR_ESTADO
+    LDA @PTR_ESTADO
+    RET
+
+VOLTAR_ESTADO:
+    LDA PTR_ESTADO
+    SUB POSICAO
+    STA PTR_ESTADO
+    RET
+
+PREENCHER: ;TO_DO
+    LDA #1
+    STA @PTR_ESTADO
+    RET
+    
+    
+
+POSICAO: DB 4
+ESTADO: DB 0, 0, 0, 0, 0, 0, 0, 0, 0 ;estado de cada quadrado; 0:vazio; 1:cheio
+PTR_ESTADO: DW ESTADO
+CURSOR: DB 64, 32, 6, 252, 0
+CIRCULO: DB 22, 11, 6, 255, 0
+ENTRADA: DB 0
+TEXTO: 
+
+ERRO:
+    HLT
+
+VIDEO_BASE EQU 16384 ; 0x4000
+
+VIDEO_CONFIG:
+    DW VIDEO_BASE
+LIMPAR:
+    DB 0              ; PRETO
+
+RETA_1: 
+    DB 43, 0, 43, 64, 255
+RETA_2: 
+    DB 85, 0, 85, 64, 255
+RETA_3: 
+    DB 0, 22, 128, 22, 255
+RETA_4: 
+    DB 0, 43, 128, 43, 255
+END MAIN
+           
+            
+           
+            
