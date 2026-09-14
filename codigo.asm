@@ -1,19 +1,19 @@
 ORG 0
 ;Um dia eu matarei o GPS
 MAIN:
-    LDA #20
-    TRAP VIDEO_CONFIG
-    OR #0
-    JNZ ERRO
-    LDA #21
-    TRAP LIMPAR
-    JSR GAME
-    HLT
+    LDA #20             ;carrega a instrução de ativar display
+    TRAP VIDEO_CONFIG   ;ativa o display
+    OR #0               ;checa se houve erro
+    JNZ ERRO            ;se sim para a aplicação
+    JSR OUTPUT_TEXTO
+    JSR GAME            ;se não vai para o jogo
+    HLT                 ;para o jogo
 
 GAME:
-    JSR LIMPAR_DISPLAY
-    JSR DESENHAR_LINHAS
-    JMP DISPLAY_CURSOR
+    JSR LIMPAR_DISPLAY  ;Limpa o display para desenhar os novos objetos
+    JSR DESENHAR_LINHAS ;desenha as linhas do tabuleiro
+    JSR ROTINA_CIRCULO  ;desenha os circulos do usuário
+    JSR DISPLAY_CURSOR  ;
     JMP ESCOLHA
     JMP GAME
     RET
@@ -24,7 +24,7 @@ LIMPAR_DISPLAY:
     TRAP LIMPAR
 
 DESENHAR_LINHAS:
-    ;faz as linhas do jogo da velha
+    ;faz as linhas da tabela
     LDA #23
     TRAP RETA_1
     LDA #23
@@ -36,31 +36,74 @@ DESENHAR_LINHAS:
     LDA #5
     RET
 
-DESENHAR_CIRCULO:
+
+
+ROTINA_CIRCULO:
+    LDA @PTR_ESTADO
+    SUB #1
+    JSR CIRCULO_INTERMEDIARIO
+    JSR CONTADOR
+
     LDA PTR_ESTADO
     ADD #1
     STA PTR_ESTADO
-    LDA @PTR_ESTADO
 
+    LDA #42
+    ADD CIRCULO
+    STA CIRCULO
+
+    LDA CONT
+    SUB #3
+    JSR VOLTAR_CIRCULO_INTERMEDIARIO
+    LDA CONT
+    SUB #6
+    JSR VOLTAR_CIRCULO_INTERMEDIARIO
+
+    LDA CONT
+    SUB #9
+    JNZ ROTINA_CIRCULO
+    JSR REINICIA_CONTADOR
+    LDA #22
+    STA CIRCULO
+    LDA #11
+    STA CIRCULO+1
+    LDA PTR_ESTADO
+    SUB #9
+    STA PTR_ESTADO
+    RET
+
+VOLTAR_CIRCULO_INTERMEDIARIO:
+    JZ VOLTAR_CIRCULO
+    RET
+
+VOLTAR_CIRCULO:
+    LDA #22
+    STA CIRCULO
+    LDA CIRCULO+1
+    ADD #21
+    STA CIRCULO+1
+    RET
     
+
+CIRCULO_INTERMEDIARIO:
+    JZ DESENHAR_CIRCULO
+    RET
+
+DESENHAR_CIRCULO:
     LDA #25
     TRAP CIRCULO
-
-    JSR CONTADOR
-    SUB #9
-
-    JNZ DESENHAR_CIRCULO
-    JSR LIMPA_CONTADOR
     RET
 
 CONTADOR:
     LDA CONT
     ADD #1
     STA CONT
+    RET
 
-LIMPA_CONTADOR:
+REINICIA_CONTADOR:
     LDA #0
     STA CONT
+    RET
 CONT: DB 0
 
 
@@ -70,14 +113,18 @@ DISPLAY_CURSOR:
     JZ CURSOR_VERMELHO
     LDA #252
     STA CURSOR+3
+    LDA #25
     TRAP CURSOR
-    JMP ESCOLHA
+    jSR VOLTAR_ESTADO
+    RET
 
-CURSOR_VERMEHO
+CURSOR_VERMELHO:
     LDA #224
     STA CURSOR+3
+    LDA #25
     TRAP CURSOR
-    JMP ESCOLHA
+    JSR VOLTAR_ESTADO
+    RET
     
 ESCOLHA:
     LDA #1
@@ -85,24 +132,24 @@ ESCOLHA:
 
     ;As entradas devem ser minusculas por enquanto
     LDA ENTRADA
-    SUB #97    ;a
+    SUB #97       ;a
     JZ ESQUERDA
 
     LDA ENTRADA
-    SUB #100   ;d
+    SUB #100    ;d
     JZ DIREITA
 
     LDA ENTRADA
-    SUB #119   ;w
+    SUB #119    ;w
     JZ CIMA
 
     LDA ENTRADA
-    SUB #115   ;s
+    SUB #115    ;s
     JZ BAIXO
 
     ;Confirmar a seleção do quadrado
     LDA ENTRADA
-    SUB #122   ;z
+    SUB #122    ;z
     JZ CONFIRMAR
 
     ;Se não decidir nada volta para decidir
@@ -196,7 +243,7 @@ EXTREMO_BAIXO:
 CONFIRMAR:
     JSR IR_ESTADO
     SUB #1
-    jSR PREENCHER
+    JNZ PREENCHER
     JSR VOLTAR_ESTADO
     JMP GAME
 
@@ -204,6 +251,11 @@ IR_ESTADO:
     LDA PTR_ESTADO
     ADD POSICAO
     STA PTR_ESTADO
+
+    LDA PTR_ESTADO+1
+    ADC #0
+    STA PTR_ESTADO+1
+    
     LDA @PTR_ESTADO
     RET
 
@@ -211,14 +263,36 @@ VOLTAR_ESTADO:
     LDA PTR_ESTADO
     SUB POSICAO
     STA PTR_ESTADO
+
+    LDA PTR_ESTADO+1
+    ADC #0
+    STA PTR_ESTADO+1
+
     RET
 
-PREENCHER: ;TO_DO
+PREENCHER:
     LDA #1
     STA @PTR_ESTADO
+    JSR VOLTAR_ESTADO
+    JMP GAME
+    
+OUTPUT_TEXTO:
+    LDA  @PTR_TEXTO
+    OR   #0
+    JZ   OUTPUT_TEXTO_FIM
+    OUT  2
+    LDA  #2
+    TRAP @PTR_TEXTO
+    LDA  PTR_TEXTO
+    ADD  #1
+    STA  PTR_TEXTO
+    LDA  PTR_TEXTO+1
+    ADC  #0
+    STA  PTR_TEXTO+1
+    JMP  OUTPUT_TEXTO
+
+OUTPUT_TEXTO_FIM:
     RET
-    
-    
 
 POSICAO: DB 4
 ESTADO: DB 0, 0, 0, 0, 0, 0, 0, 0, 0 ;estado de cada quadrado; 0:vazio; 1:cheio
@@ -226,7 +300,10 @@ PTR_ESTADO: DW ESTADO
 CURSOR: DB 64, 32, 6, 252, 0
 CIRCULO: DB 22, 11, 6, 255, 0
 ENTRADA: DB 0
-TEXTO: 
+
+TEXTO: STR "Bem vindo ao jogo da velha. As teclas disponiveis são essas:\na - esquerda\ns - baixo\nd - direita\nw - cima\nz - confirmar\nx - sair do jogo"
+    DB 0
+PTR_TEXTO: DW TEXTO 
 
 ERRO:
     HLT
