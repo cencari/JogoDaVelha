@@ -12,31 +12,32 @@ MENU:
     JSR INTRODUCAO      ;texto introdutorio
     JMP ESPERAR_TECLA_MENU
 
-ESPERAR_TECLA_MENU:
+ESPERAR_TECLA_MENU:     ;espera o usuario digitar z para começar o jogo
     LDA #1
     TRAP ENTRADA
     LDA ENTRADA
-    SUB #122
+    SUB #122            ; z
     JZ GAME
     JMP ESPERAR_TECLA_MENU
 
 GAME:
-    JSR LIMPAR_DISPLAY  ;Limpa o display para desenhar os novos objetos
-    JSR DESENHAR_LINHAS ;desenha as linhas do tabuleiro
-    JSR DESENHAR_TABULEIRO  ;desenha os circulos do usuário
-    JSR DISPLAY_CURSOR  ;desenhar o cursor como um circulo, se o quadrado já foi preenchido, pinta o simbolo do quadrado de vermelho
+    LDA #0                          ;Limpa o terminal
+    TRAP CURSOR
+    JSR LIMPAR_DISPLAY              ;Limpa o display para desenhar os novos objetos
+    JSR DESENHAR_TABULEIRO          ;desenha os circulos do usuário
+    JSR DISPLAY_CURSOR              ;desenhar o cursor como um circulo, se o quadrado já foi preenchido, pinta o simbolo do quadrado de vermelho
     JSR ESCOLHA_INTERMEDIARIA       ;rotina das escolhas do usuario dentro do jogo
-    JSR CHECAR_FIM
-    JSR ADVERSARIO      ;rotina do adversario
-    JMP GAME            ;faz um loop
+    JSR CHECAR_FIM                  ;checa se o alguem preencheu alguma fileira
+    JSR ADVERSARIO                  ;rotina do adversario
+    JMP GAME                        ;faz um loop
     RET
 
-LIMPAR_DISPLAY:         ;limpa o display para atualizar as imagens
+LIMPAR_DISPLAY:                     ;limpa o display para atualizar as imagens
     LDA #21
     TRAP LIMPAR
     RET
 
-DESENHAR_LINHAS:        ;faz as linhas da tabela
+DESENHAR_LINHAS:                    ;faz as linhas da tabela
     LDA #23
     TRAP RETA_1
     LDA #23
@@ -45,20 +46,20 @@ DESENHAR_LINHAS:        ;faz as linhas da tabela
     TRAP RETA_3
     LDA #23
     TRAP RETA_4
-    LDA #5
     RET
 
 DESENHAR_TABULEIRO:
+    JSR DESENHAR_LINHAS                 ;desenha as linhas do tabuleiro
     JSR DESENHAR_PLAYER_OU_ADVERSARIO   ;desenha o X ou O
 
     JSR CONTADOR                        ;soma 1 ao contador
 
-    LDA PTR_ESTADO                      ;vai para ao próximo quadrado
+    LDA PTR_CELULA                      ;vai para ao próximo quadrado
     ADD #1
-    STA PTR_ESTADO
-    LDA PTR_ESTADO+1
+    STA PTR_CELULA
+    LDA PTR_CELULA+1
     ADC #0
-    STA PTR_ESTADO+1
+    STA PTR_CELULA+1
 
     LDA #42                             ;desloca o x do circulo player
     ADD CIRCULO
@@ -90,24 +91,24 @@ DESENHAR_TABULEIRO:
     LDA #11
     STA CIRCULO_ADVERSARIO+1
 
-    LDA PTR_ESTADO
+    LDA PTR_CELULA
     SUB #9
-    STA PTR_ESTADO
-    LDA PTR_ESTADO+1
+    STA PTR_CELULA
+    LDA PTR_CELULA+1
     SBC #0
-    STA PTR_ESTADO+1
+    STA PTR_CELULA+1
     RET
 
 DESENHAR_ADVERSARIO:
     LDA #25
-    TRAP CIRCULO_ADVERSARIO
+    TRAP CIRCULO_ADVERSARIO             
     RET
 
 DESENHAR_PLAYER_OU_ADVERSARIO:
-    LDA @PTR_ESTADO
+    LDA @PTR_CELULA
     SUB #1
     JZ DESENHAR_PLAYER
-    LDA @PTR_ESTADO
+    LDA @PTR_CELULA
     SUB #2
     JZ DESENHAR_ADVERSARIO
     RET
@@ -150,14 +151,14 @@ CONT: DB 0
 
 
 DISPLAY_CURSOR:
-    JSR IR_ESTADO
+    JSR IR_CELULA
     OR #0
     JNZ CURSOR_VERMELHO
     LDA #252
     STA CURSOR+3
     LDA #25
     TRAP CURSOR
-    jSR VOLTAR_ESTADO
+    jSR VOLTAR_CELULA
     RET
 
 CURSOR_VERMELHO:
@@ -165,7 +166,7 @@ CURSOR_VERMELHO:
     STA CURSOR+3
     LDA #25
     TRAP CURSOR
-    JSR VOLTAR_ESTADO
+    JSR VOLTAR_CELULA
     RET
 
 ESCOLHA_INTERMEDIARIA:
@@ -297,39 +298,39 @@ EXTREMO_BAIXO:
     RET
 
 CONFIRMAR:
-    JSR IR_ESTADO
+    JSR IR_CELULA
     OR #0
     JZ PREENCHER
-    JSR VOLTAR_ESTADO
+    JSR VOLTAR_CELULA
     RET
 
-IR_ESTADO:
-    LDA PTR_ESTADO
+IR_CELULA:
+    LDA PTR_CELULA
     ADD POSICAO
-    STA PTR_ESTADO
+    STA PTR_CELULA
 
-    LDA PTR_ESTADO+1
+    LDA PTR_CELULA+1
     ADC #0
-    STA PTR_ESTADO+1
+    STA PTR_CELULA+1
     
-    LDA @PTR_ESTADO
+    LDA @PTR_CELULA
     RET
 
-VOLTAR_ESTADO:
-    LDA PTR_ESTADO
+VOLTAR_CELULA:
+    LDA PTR_CELULA
     SUB POSICAO
-    STA PTR_ESTADO
+    STA PTR_CELULA
 
-    LDA PTR_ESTADO+1
+    LDA PTR_CELULA+1
     SBC #0
-    STA PTR_ESTADO+1
+    STA PTR_CELULA+1
 
     RET
 
 PREENCHER:
     LDA #1
-    STA @PTR_ESTADO
-    JSR VOLTAR_ESTADO
+    STA @PTR_CELULA
+    JSR VOLTAR_CELULA
     JSR TURNO_DO_JOGADOR_FALSO
     JSR INCREMENTA_CONT_DOS_QUADRADOS
     RET
@@ -368,26 +369,26 @@ ADVERSARIO:
 NUMERO_VALIDO:
     LDA NUMERO_ALEATORIO
 
-    ADD PTR_ESTADO
-    STA PTR_ESTADO
-    LDA PTR_ESTADO+1
+    ADD PTR_CELULA
+    STA PTR_CELULA
+    LDA PTR_CELULA+1
     ADC #0
-    STA PTR_ESTADO+1
+    STA PTR_CELULA+1
 
-    LDA @PTR_ESTADO
+    LDA @PTR_CELULA
     SUB #1
     JZ  TENTAR_NOVAMENTE
     SUB #1
     JZ  TENTAR_NOVAMENTE
     LDA #2
-    STA @PTR_ESTADO
+    STA @PTR_CELULA
 
-    LDA PTR_ESTADO
+    LDA PTR_CELULA
     SUB NUMERO_ALEATORIO
-    STA PTR_ESTADO
-    LDA PTR_ESTADO+1
+    STA PTR_CELULA
+    LDA PTR_CELULA+1
     SBC #0
-    STA PTR_ESTADO+1
+    STA PTR_CELULA+1
 
     JSR INCREMENTA_CONT_DOS_QUADRADOS
 
@@ -398,12 +399,12 @@ PULAR_ADVERSARIO:
     RET
 
 TENTAR_NOVAMENTE:       ;limpa o ponteiro
-    LDA PTR_ESTADO
+    LDA PTR_CELULA
     SUB NUMERO_ALEATORIO
-    STA PTR_ESTADO
-    LDA PTR_ESTADO+1
+    STA PTR_CELULA
+    LDA PTR_CELULA+1
     SBC #0
-    STA PTR_ESTADO+1
+    STA PTR_CELULA+1
     JMP ADVERSARIO
 
 TURNO_DO_JOGADOR_FALSO:
@@ -422,49 +423,53 @@ INCREMENTA_CONT_DOS_QUADRADOS:
     STA QUADRADOS_MARCADOS
     RET
 
+------JOGO TERMINOU------
 CHECAR_FIM:
     LDA QUADRADOS_MARCADOS
-    SUB #6
+    SUB #5
     JN RETORNAR
 
-    LDA ESTADO
-    AND ESTADO+1
-    AND ESTADO+2
+                        ;verifica cada possibilidade de fim de jogo
+                        ;compara cada quadrado da coluna, se todos forem iguais resultara no valor de vencedor
+                        ;1 - Player | 2 - Adversario
+    LDA CELULA
+    AND CELULA+1
+    AND CELULA+2
     JSR CHECAR_RESULTADO
 
-    LDA ESTADO+3
-    AND ESTADO+4
-    AND ESTADO+5
+    LDA CELULA+3
+    AND CELULA+4
+    AND CELULA+5
     JSR CHECAR_RESULTADO
 
-    LDA ESTADO+6
-    AND ESTADO+7
-    AND ESTADO+8
+    LDA CELULA+6
+    AND CELULA+7
+    AND CELULA+8
     JSR CHECAR_RESULTADO
 
-    LDA ESTADO
-    AND ESTADO+3
-    AND ESTADO+6
+    LDA CELULA
+    AND CELULA+3
+    AND CELULA+6
     JSR CHECAR_RESULTADO
 
-    LDA ESTADO+1
-    AND ESTADO+4
-    AND ESTADO+7
+    LDA CELULA+1
+    AND CELULA+4
+    AND CELULA+7
     JSR CHECAR_RESULTADO    
 
-    LDA ESTADO+2
-    AND ESTADO+5
-    AND ESTADO+8
+    LDA CELULA+2
+    AND CELULA+5
+    AND CELULA+8
     JSR CHECAR_RESULTADO
 
-    LDA ESTADO
-    AND ESTADO+4
-    AND ESTADO+8
+    LDA CELULA
+    AND CELULA+4
+    AND CELULA+8
     JSR CHECAR_RESULTADO
 
-    LDA ESTADO+2
-    AND ESTADO+4
-    AND ESTADO+6
+    LDA CELULA+2
+    AND CELULA+4
+    AND CELULA+6
     JSR CHECAR_RESULTADO
 
     LDA QUADRADOS_MARCADOS
@@ -476,8 +481,7 @@ CHECAR_FIM:
 CHECAR_RESULTADO:
     SUB #1      ;player venceu
     JZ VITORIA
-    ADD #1
-    SUB #2      ;player perdeu
+    SUB #1      ;player perdeu
     JZ DERROTA
     RET
 
@@ -540,12 +544,19 @@ TRANSICAO:
     POP
     POP
     POP
+    JSR REINICIAR_ESTADO
     JMP MENU
 
 RETORNAR:
     RET
 
 REINICIAR_JOGO:
+    POP
+    POP
+    JSR REINICIAR_ESTADO
+    JMP GAME
+
+REINICIAR_ESTADO:               ;reinicia todas as variaveis do jogo
     LDA #1
     STA TURNO_DO_JOGADOR
     LDA #0
@@ -556,79 +567,73 @@ REINICIAR_JOGO:
     LDA #32
     STA CURSOR+1
 
-
-
-    JSR REINICIAR_ESTADO
+    JSR REINICIAR_CELULA
 
     LDA #4
     STA POSICAO
 
-    LDA BKP_PTR_VITORIA     ; Resetando o texto de vitória
+    LDA BKP_PTR_VITORIA         ;reseta o texto de vitória
     STA PTR_STR_VITORIA
     LDA BKP_PTR_VITORIA+1
     STA PTR_STR_VITORIA+1
 
-    LDA BKP_PTR_DERROTA     ; Resetando o texto de derrota
+    LDA BKP_PTR_DERROTA         ;reseta o texto de derrota
     STA PTR_STR_DERROTA
     LDA BKP_PTR_DERROTA+1
     STA PTR_STR_DERROTA+1
 
-    LDA BKP_PTR_EMPATE     ; Resetando o texto de empate
+    LDA BKP_PTR_EMPATE          ;reseta o texto de empate
     STA PTR_STR_EMPATE
     LDA BKP_PTR_EMPATE+1
     STA PTR_STR_EMPATE+1
 
-    LDA BKP_PTR_INTRODUCAO     ; Resetando o texto de introducao
+    LDA BKP_PTR_INTRODUCAO      ;reseta o texto de introducao
     STA PTR_STR_INTRODUCAO
     LDA BKP_PTR_INTRODUCAO+1
     STA PTR_STR_INTRODUCAO+1
-    
-
-    POP
-    POP
-    JMP GAME 
+    RET
 
 
-REINICIAR_ESTADO:
+REINICIAR_CELULA:               ;reinicia o vetor celula
     LDA #0
-    STA @PTR_ESTADO
+    STA @PTR_CELULA
 
     JSR CONTADOR
 
-    LDA PTR_ESTADO
+    LDA PTR_CELULA
     ADD #1
-    STA PTR_ESTADO
-    LDA PTR_ESTADO+1
+    STA PTR_CELULA
+    LDA PTR_CELULA+1
     ADC #0
-    STA PTR_ESTADO+1
+    STA PTR_CELULA+1
 
     LDA CONT
     SUB #9
-    JNZ REINICIAR_ESTADO
+    JNZ REINICIAR_CELULA
 
     JSR REINICIA_CONTADOR
 
-    LDA PTR_ESTADO
+    LDA PTR_CELULA
     SUB #9
-    STA PTR_ESTADO
-    LDA PTR_ESTADO+1
+    STA PTR_CELULA
+    LDA PTR_CELULA+1
     SBC #0
-    STA PTR_ESTADO+1
+    STA PTR_CELULA+1
 
     RET
 
     
 
-BKP_PTR_VITORIA: DW STR_VITORIA
-BKP_PTR_DERROTA: DW STR_DERROTA
+BKP_PTR_VITORIA: DW STR_VITORIA             ;guarda inicio do vetor
+BKP_PTR_DERROTA: DW STR_DERROTA             
 BKP_PTR_EMPATE:  DW STR_EMPATE
 BKP_PTR_INTRODUCAO:   DW STR_INTRODUCAO
 
 TURNO_DO_JOGADOR: DB 1                  ;indica se é o turno do jogador ou não
 NUMERO_ALEATORIO: DB 0                  ;variavel para guardar numeros aleatorios
 POSICAO: DB 4                           ;posicão que o jogador se encontra
-ESTADO: DB 0, 0, 0, 0, 0, 0, 0, 0, 0    ;estado de cada quadrado; 0:vazio; 1:cheio
-PTR_ESTADO: DW ESTADO                   ;ponteiro do estado
+CELULA: DB 0, 0, 0, 0, 0, 0, 0, 0, 0    ;estado de cada quadrado; 0:vazio; 1:cheio
+PTR_CELULA: DW CELULA                   ;ponteiro do estado
 QUADRADOS_MARCADOS: DB 0                ;quantidade de quadrados preenchidos
 CURSOR: DB 64, 32, 6, 252, 0            ;"estrutura" do circulo do cursor
 CIRCULO: DB 22, 11, 6, 255, 0           ;circulo que o jogador usa para preencher os quadrados
