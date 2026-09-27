@@ -100,8 +100,51 @@ DESENHAR_TABULEIRO:
     RET
 
 DESENHAR_ADVERSARIO:
-    LDA #25
-    TRAP CIRCULO_ADVERSARIO             
+    ;diagonal 1
+    LDA CIRCULO_ADVERSARIO      
+    SUB CIRCULO_ADVERSARIO+2    
+    STA RETA_X                  
+
+    LDA CIRCULO_ADVERSARIO+1    
+    SUB CIRCULO_ADVERSARIO+2    
+    STA RETA_X+1                
+
+    LDA CIRCULO_ADVERSARIO      
+    ADD CIRCULO_ADVERSARIO+2    
+    STA RETA_X+2                 
+
+    LDA CIRCULO_ADVERSARIO+1    
+    ADD CIRCULO_ADVERSARIO+2    
+    STA RETA_X+3           
+
+    LDA CIRCULO_ADVERSARIO+3    
+    STA RETA_X+4
+
+    LDA #23
+    TRAP RETA_X            
+
+    ;diagonal 2
+    LDA CIRCULO_ADVERSARIO      
+    SUB CIRCULO_ADVERSARIO+2    
+    STA RETA_X             
+
+    LDA CIRCULO_ADVERSARIO+1    
+    ADD CIRCULO_ADVERSARIO+2    
+    STA RETA_X+1           
+
+    LDA CIRCULO_ADVERSARIO      
+    ADD CIRCULO_ADVERSARIO+2    
+    STA RETA_X+2           
+
+    LDA CIRCULO_ADVERSARIO+1    
+    SUB CIRCULO_ADVERSARIO+2    
+    STA RETA_X+3           
+
+    LDA CIRCULO_ADVERSARIO+3  
+    STA RETA_X+4
+
+    LDA #23
+    TRAP RETA_X            
     RET
 
 DESENHAR_PLAYER_OU_ADVERSARIO:
@@ -638,6 +681,7 @@ QUADRADOS_MARCADOS: DB 0                ;quantidade de quadrados preenchidos
 CURSOR: DB 64, 32, 6, 252, 0            ;"estrutura" do circulo do cursor
 CIRCULO: DB 22, 11, 6, 255, 0           ;circulo que o jogador usa para preencher os quadrados
 CIRCULO_ADVERSARIO: DB 22, 11, 6, 3, 0  ;circulo inimigo /trocar por X
+RETA_X:
 ENTRADA: DB 0
 
 STR_INTRODUCAO: STR "Bem vindo ao jogo da velha! As teclas disponiveis são essas:\na - esquerda\ns - baixo\nd - direita\nw - cima\nz - confirmar\nx - terminar o jogo\nr - reiniciar partida\n"
