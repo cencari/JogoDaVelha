@@ -1,5 +1,5 @@
 ORG 0
-;Um dia eu matarei o GPS
+
 MAIN:
     LDA #20             ;carrega a instrução de ativar display
     TRAP VIDEO_CONFIG   ;ativa o display
@@ -222,7 +222,7 @@ ESCOLHA:
     LDA #1
     TRAP ENTRADA
 
-    ;As entradas devem ser minusculas por enquanto
+    ;As entradas devem ser minusculas
     LDA ENTRADA
     SUB #97       ;a
     JZ ESQUERDA
@@ -268,7 +268,7 @@ ESQUERDA:
     STA POSICAO
     RET
 
-EXTREMA_ESQUERDA: ;lol
+EXTREMA_ESQUERDA:
     LDA CURSOR
     ADD #84
     STA CURSOR
@@ -289,7 +289,7 @@ DIREITA:
     STA POSICAO
     RET
 
-EXTREMA_DIREITA: ;lol
+EXTREMA_DIREITA:
     LDA CURSOR
     SUB #84
     STA CURSOR
@@ -378,7 +378,7 @@ PREENCHER:
     JSR INCREMENTA_CONT_DOS_QUADRADOS
     RET
     
-INTRODUCAO:             ;rotulo roubado do tutorial do professor XD
+INTRODUCAO:             ;rotulo retirado do tutorial do professor
     LDA  @PTR_STR_INTRODUCAO
     OR   #0
     JZ   RETORNAR
@@ -400,7 +400,7 @@ ADVERSARIO:
     LDA #7                  ;intrução para criar número pseudo aleatório
     TRAP CURSOR             ;variavel qualquer para ele não reclamar
 
-    AND #0b00001111          ;remove os algarismos invalidos
+    AND #0b00001111         ;remove os algarismos invalidos
 
     STA NUMERO_ALEATORIO
     LDA NUMERO_ALEATORIO
@@ -674,7 +674,7 @@ BKP_PTR_INTRODUCAO:   DW STR_INTRODUCAO
 TURNO_DO_JOGADOR: DB 1                  ;indica se é o turno do jogador ou não
 NUMERO_ALEATORIO: DB 0                  ;variavel para guardar numeros aleatorios
 POSICAO: DB 4                           ;posicão que o jogador se encontra
-CELULA: DB 0, 0, 0, 0, 0, 0, 0, 0, 0    ;estado de cada quadrado; 0:vazio; 1:cheio
+CELULA: DS 9                            ;estado de cada quadrado; 0:vazio; 1:cheio
 PTR_CELULA: DW CELULA                   ;ponteiro do estado
 QUADRADOS_MARCADOS: DB 0                ;quantidade de quadrados preenchidos
 CURSOR: DB 64, 32, 6, 252, 0            ;"estrutura" do circulo do cursor
@@ -683,7 +683,7 @@ CIRCULO_ADVERSARIO: DB 22, 11, 6, 3, 0  ;circulo inimigo /trocar por X
 RETA_X: DS 5
 ENTRADA: DB 0
 
-STR_INTRODUCAO: STR "Bem vindo ao jogo da velha! As teclas disponiveis são essas:\na - esquerda\ns - baixo\nd - direita\nw - cima\nz - confirmar\nx - terminar o jogo\nr - reiniciar partida\n"
+STR_INTRODUCAO: STR "Bem vindo ao jogo da velha! As teclas disponiveis são essas:\na - esquerda\ns - baixo\nd - direita\nw - cima\nz - confirmar\nx - terminar o jogo\nr - reiniciar partida\n\nPressione z para iniciar"
     DB 0
 PTR_STR_INTRODUCAO: DW STR_INTRODUCAO
 
