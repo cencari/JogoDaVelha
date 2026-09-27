@@ -393,7 +393,6 @@ INTRODUCAO:             ;rotulo roubado do tutorial do professor XD
     JMP  INTRODUCAO
 
 ADVERSARIO:
-
     LDA TURNO_DO_JOGADOR    ;checa se não é o turno do jogador
     OR #0
     JNZ PULAR_ADVERSARIO
@@ -542,7 +541,7 @@ VITORIA:
     STA  PTR_STR_VITORIA+1
     JMP  VITORIA
 
-STR_VITORIA: STR "Parabéns por vencer!"
+STR_VITORIA: STR "Parabéns por vencer! "
     DB 0
 PTR_STR_VITORIA: DW STR_VITORIA
 
@@ -560,7 +559,7 @@ DERROTA:
     STA  PTR_STR_DERROTA+1
     JMP  DERROTA
 
-STR_DERROTA: STR "Como que tu perdeu mano? Tu é burro?"
+STR_DERROTA: STR "Como que tu perdeu mano? Tu é burro? "
     DB 0
 PTR_STR_DERROTA: DW STR_DERROTA
 
@@ -681,7 +680,7 @@ QUADRADOS_MARCADOS: DB 0                ;quantidade de quadrados preenchidos
 CURSOR: DB 64, 32, 6, 252, 0            ;"estrutura" do circulo do cursor
 CIRCULO: DB 22, 11, 6, 255, 0           ;circulo que o jogador usa para preencher os quadrados
 CIRCULO_ADVERSARIO: DB 22, 11, 6, 3, 0  ;circulo inimigo /trocar por X
-RETA_X:
+RETA_X: DS 5
 ENTRADA: DB 0
 
 STR_INTRODUCAO: STR "Bem vindo ao jogo da velha! As teclas disponiveis são essas:\na - esquerda\ns - baixo\nd - direita\nw - cima\nz - confirmar\nx - terminar o jogo\nr - reiniciar partida\n"
