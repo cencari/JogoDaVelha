@@ -1,5 +1,13 @@
 ORG 0
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;----------------Instruções----------------;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;---------------Base do Jogo---------------;;
+
 MAIN:
     LDA #20             ;carrega a instrução de ativar display
     TRAP VIDEO_CONFIG   ;ativa o display
@@ -8,19 +16,9 @@ MAIN:
     JSR MENU            ;vai para o jogo
     HLT                 ;para o jogo
 
-
 MENU:
     JSR INTRODUCAO      ;texto introdutorio
     JMP ESPERAR_TECLA_MENU
-
-ESPERAR_TECLA_MENU:     ;espera o usuario digitar z para começar o jogo
-    LDA #1
-    TRAP ENTRADA
-    LDA ENTRADA
-    SUB #122            ; z
-    JZ GAME
-    JMP ESPERAR_TECLA_MENU
-
 
 GAME:
     LDA #0                          ;Limpa o terminal
@@ -35,6 +33,8 @@ GAME:
     JMP GAME                        ;faz um loop
     RET
 
+
+;;---------------Gráficos---------------;;
 
 LIMPAR_DISPLAY:                     ;limpa o display para atualizar as imagens
     LDA #21
@@ -71,8 +71,8 @@ DESENHAR_TABULEIRO:
     STA CIRCULO
 
     LDA #42                             ;desloca o O do inimigo
-    ADD CIRCULO_ADVERSARIO
-    STA CIRCULO_ADVERSARIO
+    ADD X_ADVERSARIO
+    STA X_ADVERSARIO
 
     LDA CONT                            ;checa se está na ultima coluna
     SUB #3
@@ -92,9 +92,9 @@ DESENHAR_TABULEIRO:
     STA CIRCULO+1
 
     LDA #22                             ;volta ao primeiro quadrado
-    STA CIRCULO_ADVERSARIO
+    STA X_ADVERSARIO
     LDA #11
-    STA CIRCULO_ADVERSARIO+1
+    STA X_ADVERSARIO+1
 
     LDA PTR_CELULA
     SUB #9
@@ -106,46 +106,46 @@ DESENHAR_TABULEIRO:
 
 DESENHAR_ADVERSARIO:
     ;diagonal 1
-    LDA CIRCULO_ADVERSARIO      
-    SUB CIRCULO_ADVERSARIO+2    
+    LDA X_ADVERSARIO      
+    SUB X_ADVERSARIO+2    
     STA RETA_X                  
 
-    LDA CIRCULO_ADVERSARIO+1    
-    SUB CIRCULO_ADVERSARIO+2    
+    LDA X_ADVERSARIO+1    
+    SUB X_ADVERSARIO+2    
     STA RETA_X+1                
 
-    LDA CIRCULO_ADVERSARIO      
-    ADD CIRCULO_ADVERSARIO+2    
+    LDA X_ADVERSARIO      
+    ADD X_ADVERSARIO+2    
     STA RETA_X+2                 
 
-    LDA CIRCULO_ADVERSARIO+1    
-    ADD CIRCULO_ADVERSARIO+2    
+    LDA X_ADVERSARIO+1    
+    ADD X_ADVERSARIO+2    
     STA RETA_X+3           
 
-    LDA CIRCULO_ADVERSARIO+3    
+    LDA X_ADVERSARIO+3    
     STA RETA_X+4
 
     LDA #23
     TRAP RETA_X            
 
     ;diagonal 2
-    LDA CIRCULO_ADVERSARIO      
-    SUB CIRCULO_ADVERSARIO+2    
+    LDA X_ADVERSARIO      
+    SUB X_ADVERSARIO+2    
     STA RETA_X             
 
-    LDA CIRCULO_ADVERSARIO+1    
-    ADD CIRCULO_ADVERSARIO+2    
+    LDA X_ADVERSARIO+1    
+    ADD X_ADVERSARIO+2    
     STA RETA_X+1           
 
-    LDA CIRCULO_ADVERSARIO      
-    ADD CIRCULO_ADVERSARIO+2    
+    LDA X_ADVERSARIO      
+    ADD X_ADVERSARIO+2    
     STA RETA_X+2           
 
-    LDA CIRCULO_ADVERSARIO+1    
-    SUB CIRCULO_ADVERSARIO+2    
+    LDA X_ADVERSARIO+1    
+    SUB X_ADVERSARIO+2    
     STA RETA_X+3           
 
-    LDA CIRCULO_ADVERSARIO+3  
+    LDA X_ADVERSARIO+3  
     STA RETA_X+4
 
     LDA #23
@@ -179,10 +179,10 @@ VOLTA_PRIMEIRA_COLUNA:
     STA CIRCULO+1
 
     LDA #22             ;volta o adversario
-    STA CIRCULO_ADVERSARIO
-    LDA CIRCULO_ADVERSARIO+1
+    STA X_ADVERSARIO
+    LDA X_ADVERSARIO+1
     ADD #21
-    STA CIRCULO_ADVERSARIO+1
+    STA X_ADVERSARIO+1
 
     RET
 
@@ -218,6 +218,17 @@ CURSOR_VERMELHO:
     TRAP CURSOR
     JSR VOLTAR_CELULA
     RET
+
+
+;;---------------Entrada do Usuario---------------;;
+
+ESPERAR_TECLA_MENU:     ;espera o usuario digitar z para começar o jogo
+    LDA #1
+    TRAP ENTRADA
+    LDA ENTRADA
+    SUB #122            ; z
+    JZ GAME
+    JMP ESPERAR_TECLA_MENU
 
 ESCOLHA_INTERMEDIARIA:
     LDA TURNO_DO_JOGADOR
@@ -263,7 +274,6 @@ ESCOLHA:
     JMP ESCOLHA
 
 
-;-------ENTRADAS DO USUARIO---------
 ESQUERDA:
     LDA CURSOR
     SUB #22
@@ -388,19 +398,7 @@ PREENCHER:
     RET
     
 
-INTRODUCAO:             ;rotulo retirado do tutorial do professor
-    LDA  @PTR_STR_INTRODUCAO
-    OR   #0
-    JZ   RETORNAR
-    LDA  #2
-    TRAP @PTR_STR_INTRODUCAO
-    LDA  PTR_STR_INTRODUCAO
-    ADD  #1
-    STA  PTR_STR_INTRODUCAO
-    LDA  PTR_STR_INTRODUCAO+1
-    ADC  #0
-    STA  PTR_STR_INTRODUCAO+1
-    JMP  INTRODUCAO
+;;---------------Adversário---------------;;
 
 ADVERSARIO:
     LDA TURNO_DO_JOGADOR    ;checa se não é o turno do jogador
@@ -459,6 +457,9 @@ TENTAR_NOVAMENTE:       ;limpa o ponteiro
     STA PTR_CELULA+1
     JMP ADVERSARIO
 
+
+;;---------------Controle de Turnos---------------;;
+
 TURNO_DO_JOGADOR_FALSO:
     LDA #0
     STA TURNO_DO_JOGADOR
@@ -468,14 +469,66 @@ TURNO_DO_JOGADOR_POSITIVO:
     STA TURNO_DO_JOGADOR
     RET
 
-
 INCREMENTA_CONT_DOS_QUADRADOS:
     LDA QUADRADOS_MARCADOS
     ADD #1
     STA QUADRADOS_MARCADOS
     RET
 
-; ------JOGO TERMINOU-----
+
+;;---------------Texto---------------;;
+
+ESCREVE_TEXTO:
+    LDA  @PTR_TEXTO
+    OR   #0
+    JZ   RETORNAR
+    LDA  #2
+    TRAP @PTR_TEXTO
+    LDA  PTR_TEXTO
+    ADD  #1
+    STA  PTR_TEXTO
+    LDA  PTR_TEXTO+1
+    ADC  #0
+    STA  PTR_TEXTO+1
+    JMP  ESCREVE_TEXTO
+
+INTRODUCAO:             ;rotulo retirado do tutorial do professor
+    INTRODUCAO:
+    LDA PTR_STR_INTRODUCAO
+    STA PTR_TEXTO
+    LDA PTR_STR_INTRODUCAO+1
+    STA PTR_TEXTO+1
+    JSR ESCREVE_TEXTO
+    RET
+
+VITORIA:
+    LDA PTR_STR_VITORIA
+    STA PTR_TEXTO
+    LDA PTR_STR_VITORIA+1
+    STA PTR_TEXTO+1
+    JSR ESCREVE_TEXTO
+    JMP FINALIZAR_JOGO_COM_VENCEDOR
+
+DERROTA:
+    LDA PTR_STR_DERROTA
+    STA PTR_TEXTO
+    LDA PTR_STR_DERROTA+1
+    STA PTR_TEXTO+1
+    JSR ESCREVE_TEXTO
+    JMP FINALIZAR_JOGO_COM_VENCEDOR
+
+EMPATE:
+    LDA PTR_STR_EMPATE
+    STA PTR_TEXTO
+    LDA PTR_STR_EMPATE+1
+    STA PTR_TEXTO+1
+    JSR ESCREVE_TEXTO
+    JMP FINALIZAR_JOGO
+
+
+
+;;---------------Fim de Jogo---------------;;
+
 CHECAR_FIM:
     LDA QUADRADOS_MARCADOS
     SUB #5
@@ -564,53 +617,11 @@ AVANCAR_RETA_VITORIA:
     STA PTR_RETA_VITORIA+1
     RET
 
-VITORIA:
-    LDA  @PTR_STR_VITORIA
-    OR   #0
-    JZ   FINALIZAR_JOGO_COM_VENCEDOR
-    LDA  #2
-    TRAP @PTR_STR_VITORIA
-    LDA  PTR_STR_VITORIA
-    ADD  #1
-    STA  PTR_STR_VITORIA
-    LDA  PTR_STR_VITORIA+1
-    ADC  #0
-    STA  PTR_STR_VITORIA+1
-    JMP  VITORIA
-
-DERROTA:
-    LDA  @PTR_STR_DERROTA
-    OR   #0
-    JZ   FINALIZAR_JOGO_COM_VENCEDOR
-    LDA  #2
-    TRAP @PTR_STR_DERROTA
-    LDA  PTR_STR_DERROTA
-    ADD  #1
-    STA  PTR_STR_DERROTA
-    LDA  PTR_STR_DERROTA+1
-    ADC  #0
-    STA  PTR_STR_DERROTA+1
-    JMP  DERROTA
-
-EMPATE:
-    LDA  @PTR_STR_EMPATE
-    OR   #0
-    JZ   FINALIZAR_JOGO
-    LDA  #2
-    TRAP @PTR_STR_EMPATE
-    LDA  PTR_STR_EMPATE
-    ADD  #1
-    STA  PTR_STR_EMPATE
-    LDA  PTR_STR_EMPATE+1
-    ADC  #0
-    STA  PTR_STR_EMPATE+1
-    JMP  EMPATE
 
 FINALIZAR_JOGO_COM_VENCEDOR:
     LDA #23
     TRAP @PTR_RETA_VITORIA
     JMP FINALIZAR_JOGO
-
 
 FINALIZAR_JOGO:
     POP 
@@ -619,9 +630,6 @@ FINALIZAR_JOGO:
     POP
     JSR REINICIAR_ESTADO
     JMP MENU
-
-RETORNAR:
-    RET
 
 REINICIAR_JOGO:
     POP
@@ -645,25 +653,6 @@ REINICIAR_ESTADO:               ;reinicia todas as variaveis do jogo
     LDA #4
     STA POSICAO
 
-    LDA BKP_PTR_VITORIA         ;reseta o texto de vitória
-    STA PTR_STR_VITORIA
-    LDA BKP_PTR_VITORIA+1
-    STA PTR_STR_VITORIA+1
-
-    LDA BKP_PTR_DERROTA         ;reseta o texto de derrota
-    STA PTR_STR_DERROTA
-    LDA BKP_PTR_DERROTA+1
-    STA PTR_STR_DERROTA+1
-
-    LDA BKP_PTR_EMPATE          ;reseta o texto de empate
-    STA PTR_STR_EMPATE
-    LDA BKP_PTR_EMPATE+1
-    STA PTR_STR_EMPATE+1
-
-    LDA BKP_PTR_INTRODUCAO      ;reseta o texto de introducao
-    STA PTR_STR_INTRODUCAO
-    LDA BKP_PTR_INTRODUCAO+1
-    STA PTR_STR_INTRODUCAO+1
     RET
 
 REINICIAR_CELULA:               ;reinicia o vetor celula
@@ -694,37 +683,51 @@ REINICIAR_CELULA:               ;reinicia o vetor celula
 
     RET
 
+
+;;---------------Utils---------------;;
+
+RETORNAR:
+    RET
+
+ERRO:
+    HLT
+    
     
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;------------------Dados------------------;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;----Jogadador---;;
 
 TURNO_DO_JOGADOR: DB 1                  ;indica se é o turno do jogador ou não
-NUMERO_ALEATORIO: DB 0                  ;variavel para guardar numeros aleatorios
-
 POSICAO: DB 4                           ;posicão que o jogador se encontra
 CURSOR:  DB 64, 32, 6, 252, 0           ;"estrutura" do circulo do cursor
+ENTRADA: DB 0
+
+
+;;----Adversário---;;
+
+NUMERO_ALEATORIO: DB 0                  ;variavel para guardar numeros aleatorios
+
+
+;;----Tabuleiro----;;
 
 CELULA:             DS 9                ;estado de cada quadrado; 0:vazio; 1:cheio
 PTR_CELULA:         DW CELULA           ;ponteiro do estado
 QUADRADOS_MARCADOS: DB 0                ;quantidade de quadrados preenchidos
 
-CIRCULO:            DB 22, 11, 6, 255, 0;circulo que o jogador usa para preencher os quadrados
-CIRCULO_ADVERSARIO: DB 22, 11, 6, 3, 0  ;circulo inimigo /trocar por X
-RETA_X: DS 5
 
-ENTRADA: DB 0
-
+;;---Texto----;;
 
 PTR_STR_INTRODUCAO: DW STR_INTRODUCAO
 PTR_STR_VITORIA:    DW STR_VITORIA
 PTR_STR_DERROTA:    DW STR_DERROTA
 PTR_STR_EMPATE:     DW STR_EMPATE
+PTR_TEXTO:          DS 2
 
-BKP_PTR_INTRODUCAO: DW STR_INTRODUCAO
-BKP_PTR_VITORIA:    DW STR_VITORIA             
-BKP_PTR_DERROTA:    DW STR_DERROTA             
-BKP_PTR_EMPATE:     DW STR_EMPATE
-
-STR_INTRODUCAO: STR "Bem vindo ao jogo da velha! As teclas disponiveis são essas:\na - esquerda\ns - baixo\nd - direita\nw - cima\nz - confirmar\nx - terminar o jogo\nr - reiniciar partida\n\nPressione z para iniciar"
+STR_INTRODUCAO: STR "Bem vindo ao jogo da velha! As teclas disponiveis são:\na - esquerda\ns - baixo\nd - direita\nw - cima\nz - confirmar\nx - terminar o jogo\nr - reiniciar partida\n\nPressione z para iniciar"
                 DB 0
 STR_VITORIA:    STR "Parabéns por vencer!\n"
                 DB 0
@@ -733,8 +736,12 @@ STR_DERROTA:    STR "Você perdeu!\n"
 STR_EMPATE:     STR "Tente outra vez.\n"
                 DB 0
 
-ERRO:
-    HLT
+
+;;----Gráficos----;;
+
+CIRCULO:        DB 22, 11, 6, 255, 0;circulo que o jogador usa para preencher os quadrados
+X_ADVERSARIO:   DB 22, 11, 6, 3, 0  ;circulo inimigo 
+RETA_X:         DS 5
 
 VIDEO_BASE EQU 16384 ; 0x4000
 
