@@ -28,8 +28,9 @@ GAME:
     JSR LIMPAR_DISPLAY              ;Limpa o display para desenhar os novos objetos
     JSR DESENHAR_TABULEIRO          ;desenha os circulos do usuário
     JSR DISPLAY_CURSOR              ;desenhar o cursor como um circulo, se o quadrado já foi preenchido, pinta o simbolo do quadrado de vermelho
+    JSR CHECAR_FIM                  ;checa se o adversario venceu
     JSR ESCOLHA_INTERMEDIARIA       ;rotina das escolhas do usuario dentro do jogo
-    JSR CHECAR_FIM                  ;checa se o alguem preencheu alguma fileira
+    JSR CHECAR_FIM                  ;checa se jogador venceu
     JSR ADVERSARIO                  ;rotina do adversario
     JMP GAME                        ;faz um loop
     RET
@@ -566,7 +567,7 @@ AVANCAR_RETA_VITORIA:
 VITORIA:
     LDA  @PTR_STR_VITORIA
     OR   #0
-    JZ   DESENHAR_RETA_VITORIA
+    JZ   FINALIZAR_JOGO_COM_VENCEDOR
     LDA  #2
     TRAP @PTR_STR_VITORIA
     LDA  PTR_STR_VITORIA
@@ -580,7 +581,7 @@ VITORIA:
 DERROTA:
     LDA  @PTR_STR_DERROTA
     OR   #0
-    JZ   DESENHAR_RETA_VITORIA
+    JZ   FINALIZAR_JOGO_COM_VENCEDOR
     LDA  #2
     TRAP @PTR_STR_DERROTA
     LDA  PTR_STR_DERROTA
@@ -594,7 +595,7 @@ DERROTA:
 EMPATE:
     LDA  @PTR_STR_EMPATE
     OR   #0
-    JZ   TRANSICAO
+    JZ   FINALIZAR_JOGO
     LDA  #2
     TRAP @PTR_STR_EMPATE
     LDA  PTR_STR_EMPATE
@@ -605,13 +606,13 @@ EMPATE:
     STA  PTR_STR_EMPATE+1
     JMP  EMPATE
 
-DESENHAR_RETA_VITORIA:
+FINALIZAR_JOGO_COM_VENCEDOR:
     LDA #23
     TRAP @PTR_RETA_VITORIA
-    JMP TRANSICAO
+    JMP FINALIZAR_JOGO
 
 
-TRANSICAO:
+FINALIZAR_JOGO:
     POP 
     POP
     POP
@@ -727,7 +728,7 @@ STR_INTRODUCAO: STR "Bem vindo ao jogo da velha! As teclas disponiveis são essa
                 DB 0
 STR_VITORIA:    STR "Parabéns por vencer!\n"
                 DB 0
-STR_DERROTA:    STR "Como que tu perdeu mano? Tu é burro?\n"
+STR_DERROTA:    STR "Você perdeu!\n"
                 DB 0
 STR_EMPATE:     STR "Tente outra vez.\n"
                 DB 0
